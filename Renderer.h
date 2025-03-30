@@ -95,11 +95,29 @@ void RdrRender(void) {
     Tank *tank = RegEntry(regTank, it);
     Vec pos = tank->pos;
     Color color = tank->color;
-
-    // TODO: You may need to delete or add codes here.
-    for (int y = -1; y <= 1; ++y)
-      for (int x = -1; x <= 1; ++x)
-        RdrPutChar(Add(pos, (Vec){x, y}), 'O', color);
+    // 根据坦克的方向绘制不同的标志
+    char tankShape[3][3];
+    switch (tank->dir) {
+    case eDirOP: // Up
+      memcpy(tankShape, (char[3][3]){{'@', '@', '@'}, {'O', '|', 'O'}, {'O', '+', 'O'}}, sizeof(tankShape));
+      break;
+    case eDirON: // Down
+      memcpy(tankShape, (char[3][3]){{'O', '+', 'O'}, {'O', '|', 'O'}, {'@', '@', '@'}}, sizeof(tankShape));
+      break;
+    case eDirNO: // Left
+      memcpy(tankShape, (char[3][3]){{'O', 'O', '@'}, {'+', '-', '@'}, {'O', 'O', '@'}}, sizeof(tankShape));
+      break;
+    case eDirPO: // Right
+      memcpy(tankShape, (char[3][3]){{'@', 'O', 'O'}, {'@', '-', '+'}, {'@', 'O', 'O'}}, sizeof(tankShape));
+      break;
+    }
+    // 绘制坦克
+    for (int y = 0; y < 3; ++y) {
+      for (int x = 0; x < 3; ++x) {
+        Vec offset = {x - 1, y - 1}; // 偏移量，确保坦克以中心为基准
+        RdrPutChar(Add(pos, offset), tankShape[y][x], color);
+      }
+    }
   }
 
   // Render bullets.
@@ -107,7 +125,6 @@ void RdrRender(void) {
     Bullet *bullet = RegEntry(regBullet, it);
     Vec pos = bullet->pos;
     Color color = bullet->color;
-
     RdrPutChar(pos, 'o', color);
   }
 }
@@ -115,20 +132,29 @@ void RdrRender(void) {
 /// \brief Flush the previously rendered frame to screen to
 /// make it truly visible.
 void RdrFlush(void) {
+  // 获取上一帧的字符和颜色数据
   char *csPrev = renderer.csPrev;
   Color *colorsPrev = renderer.colorsPrev;
+  // 获取当前帧的字符和颜色数据
   const char *cs = renderer.cs;
   const Color *colors = renderer.colors;
 
+  // 遍历地图的每一个位置
   for (int y = 0; y < map.size.y; ++y)
     for (int x = 0; x < map.size.x; ++x) {
+      // 计算当前位置的坐标
       Vec pos = {x, y};
+      // 计算当前位置在一维数组中的索引
       int i = Idx(pos);
 
+      // 检查当前帧和上一帧的字符或颜色是否不同
       if (cs[i] != csPrev[i] || colors[i] != colorsPrev[i]) {
+        // 如果不同，移动光标到该位置
         MoveCursor(pos);
+        // 输出带有颜色的字符
         printf(TK_TEXT("%c", TK_RUNTIME_COLOR), colors[i], cs[i]);
 
+        // 更新上一帧的数据为当前帧的数据
         csPrev[i] = cs[i];
         colorsPrev[i] = colors[i];
       }
