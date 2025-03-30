@@ -6,7 +6,6 @@
 ///
 /// The powerful "registries" are intensively used to make our life easier.
 /// Please read the comments of `Registry.h` before continue.
-
 //
 //
 //
@@ -17,18 +16,10 @@
 
 /// \brief Enums of the 2D directions.
 typedef enum {
-  eDirNN, // Left-down.
-  eDirON, // Down.
-  eDirPN, // Right-down.
-
-  eDirNO, // Left.
-  eDirOO, // Center.
-  eDirPO, // Right.
-
-  eDirNP, // Left-up.
-  eDirOP, // Up.
-  eDirPP, // Right-up.
-
+  eDirON,      // Down.
+  eDirNO,      // Left.
+  eDirPO,      // Right.
+  eDirOP,      // Up
   eDirInvalid, // Invalid.
 } Dir;
 
@@ -56,6 +47,7 @@ typedef struct {
   Dir dir;       // Direction.
   Color color;   // Color of the tank and its bullets.
   bool isPlayer; // Whether this tank is player or enemy.
+  bool flag_check;
 } Tank;
 
 /// \example It is easy to create or delete a `Bullet` with the help of registries, see `Registry.h`.
