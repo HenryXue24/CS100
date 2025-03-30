@@ -9,12 +9,18 @@
 /// 2. Run the executable.
 /// 3. Move with "WASD" and shoot with "K".
 /// 4. Exit with "ESC".
+//
+//
+//
+//
+//
+#include <stdlib.h>
+#include <time.h>
 
-//
-//
-//
-//
-//
+int ramdom_generator(int min, int max) {
+  return rand() % (max - min + 1) + min;
+}
+
 #include "Game.h"
 
 int main(void) {
@@ -23,10 +29,10 @@ int main(void) {
 
   // Configure the game.
   config.fps = 30;
-  config.mapSize = (Vec){20, 20};
-  config.nEnemies = 0;
-  config.nSolids = 0;
-  config.nWalls = 0;
+  config.mapSize = (Vec){40, 40};
+  config.nEnemies = ramdom_generator(2, 5);
+  config.nSolids = ramdom_generator(5, 8); // 不可以被击碎的内容
+  config.nWalls = ramdom_generator(3, 6);  // 可以被击碎的墙
 
   // Run the game.
   GameLifecycle();
