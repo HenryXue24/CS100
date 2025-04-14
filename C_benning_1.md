@@ -170,18 +170,18 @@ type:           ************size**************
 `typedef type newname;`例如`typedef int new_int`则会告诉编译器`new_int`是`int`的一个别名则会有`new_int distance;`这样的声明式合法的。
 
 注意`typedef`存在一定的作用域
-#### 类型转换
+### 类型转换
 类型转换是将一个数据类型的值转换成为另一个数据类型的值，`C++`中有四种类型转换：静态转换、动态转换、常量转换和重新解释转换。
-##### Static Cast
+#### Static Cast
 静态转换是将一种数据类型的值强制转换成为另一种数据类型的值。静态类型转换同煮成用于比较类型相似的对象之间的转换，例如将`int`类型转换成为`float`静态转换的时候不会有任何的类型检查，所以可能会导致运行时候的错误。
 ```c++
 int i =10;
 float f = static_cast<float>(i);
 ```
-##### const_cast
+#### const_cast
 ```c++
 const int a = 10;
-int *ptr = &a;//这里会导致错误因为使用ptr可以改变const的值
+int *ptr = &a;//这里会导致错误因为使用ptr可以改变const的值(在C中只是Warning,但是在c++中就是Error)
 int *ptr2 = const_cast<int*>(&a);//强制转换成为int*
 *ptr2++;//UB本质上不能够改变const的数值
 ```
@@ -191,17 +191,21 @@ int &b = a;//Error!
 int &b = const_cast<int &>(a);
 b++;//UB
 ```
-##### `reinterpret_cast`
+#### `reinterpret_cast`
 ```c++
 int ival = 42;
 char *pc = reinterpret_cast<char *>(&ival);//Dangerous
+// 重新解释了二进制的解读方式
 ```
-##### 继承自C的强制转换说明
+#### `dynamic_cast<target-type>(expression)`
+- 作用：用于多态类对象的安全转换，在运行的时候检查类型
+- 场景：基类指针，引用与派生类指针/引用之间的转换
+#### 继承自C的强制转换说明
 ```c++
 int i = 10;
 cout<<(double)i<<endl;
 ```
-##### C++ 中也存在隐式转换
+#### C++ 中也存在隐式转换
 - 在表达式中比`int`类型还小的整数类型（`char`,`short`）会被提升为`int`类型。如果`int`类型无法表示该值，会被提升为`unsigned int`类型
 - 混合类型运算：在包含不同算术类型的表达式中，编译器会将操作数转换为一种共同的类型，以便进行运算。通常，类型转换的方向是从表示范围小的类型向表示范围大的类型转换，例如从 `int` 到 `double`.
 - 赋值转换：在将一个值赋给不同类型的变量时，会发生隐式转换。**赋值转换会将右侧表达式的值转换为左侧变量的类型。（注意会有可能丢失精度）**
@@ -215,11 +219,9 @@ int main() {
     return 0;
 }
 ```
-- 但是注意在C++中不能够通过`void*`将两个不同类别的指针进行转换。同时还有`const int*`这样类型的指针不能够转换成为`void*`类型的指针,如果要将一个`const int*`类型的指针转换成为`void*`类型的指针：`const_cast<void*>(static_cast<const void*>(p))`要转换两次
+- (Better C)但是注意在C++中不能够通过`void*`将两个不同类别的指针进行转换。同时还有`const int*`这样类型的指针不能够转换成为`void*`类型的指针,如果要将一个`const int*`类型的指针转换成为`void*`类型的指针：`const_cast<void*>(static_cast<const void*>(p))`要转换两次
 - `bool`类型的转换：在条件判断语句中，非布尔类型的值会被隐式转换为布尔类型。通常，零值会被转换为 `false`，非零值会被转换为 `true`。
 - 所有的浮点计算都是双精度进行的，也就是说所有的`float`都会转换成为`double`
-### 变量作用域
-完全和C一致，存在`static`变量的定义，作用也同C，本章节的内容请查看[C_beinning](https://github.com/LYM102/CS100/blob/C_benning/C_benning_1.md)
 ### C++中的常量
 #### 整数常量和小数常量
 整数常量可以是十进制或者是八进制或者是16禁止的常量。前缀指定基数：`0x`或者是`0X`表示十六进制，`0`表示八进制，不带前缀则默认表示十进制
@@ -264,16 +266,6 @@ int main()
 - 整数除法或者是取余的过程中的正负号的取法
     - 整除：两者的符号相同则为正，如果两者的符号相反则为负
     - 取余：余数的正负号和被除数相同
-### 函数
-基本内容和C相同，详情查看[C_beinning](https://github.com/LYM102/CS100/blob/C_benning/C_benning_1.md)
-- 但是在c++中允许函数重名，但是需要能够通过传入值的不同（传递参数的个数/传递参数的类型）来区别，**注意返回值的不同不能够作为判断标准**
-- 同时和python 一样C++中的函数允许存在默认值，但是不能够像python一样通过关键字传参，因此，如果存在默认值的情况，只能够在参数的最后使用，在前面参数使用默认值而后面参数没有默认值的情况是没有效率的。
-#### `Lambda`函数与表达式
-C++11中提供了对匿名函数的支持，称为`Lambda`函数，`Lambda`将函数看成对象，比如可以将他们赋值给变量作为参数传递，还可以像函数一样对他求值。`[capture list] (parameter list) mutable(可选) exception(可选) -> return type(可选) { function body }`，其中`capture list`用于指定`lambda`函数中可以访问那些外部的变量，以及如何访问这一些变量（按值捕捉或者是按照引用捕捉）`mutable`表示的意思是按值捕捉的变量内容可以被修改（注意只是能够修改副本，如果没有这个`mutable`就不能够修改传递进来的副本的数值）`reutrn type`表示的是如果存在返回值那么返回值的类型是什么.
-- 几个注意事项
-1. 如果在括号中没有参数的传递，那么就没有办法对外部的参数进行引用
-2. 如果要将所有的外部的副本全部传递进来，应该使用`[=]{}`
-3. 如果要将外部的所有的变量都引用调入则应该使用`[&]`
 ### `auto`与`decltype`
 ```c++
 auto str = "hello"//`const char*`
@@ -283,6 +275,7 @@ auto&py = x;//`const int&`!!
 auto *ptry = &x;//`const int*`
 ```
 - `decltype(x) y = 10;`如果`x`是`int`则会有`int y = 10;`如果`x`是`double`则会有`double y = 10;`但是如果`decltyoe(foo(x))`这里的`foo`函数并不会被调用，这里完全是计算机基于代码推测的。
+- 同时`auto`也不会对于`int`类型的越界有所操作
 ## C++'s string vs C's string
 1. 内存自动管理，`std::string`会自动处理内存分配和释放，创建`std::string`对象的时候，内部会根据储存需求自动妇女配内存；对象生命周期结束，会自动释放内存，无需手动处理。
 2. 动态调整储存内存，对`std::string`执行操作插入，如`insert`方法或者是删除方法，内部的内存会自动调整。
@@ -535,13 +528,35 @@ int count_lowercase(const std::string &str) {
     return cnt;
 }
 ```
-同时这里的`str`也是只读类型🙅‍通过str来修改字符串。
+同时这里的`str`也是只读类型不能通过str来修改字符串。
 ### 对于数组的引用
 ```c++
 int arr[10];
 int (&arrRef)[10] = arr;
+int arr_2[3][5];
+int (&two_dimiension_arr)[3][5] = arr_2;
 ```
 和指针不同数组的引用传递的大小一定是和原来数组的引用大小相同，但是指针的可以随意改动大小
+### Rvalue References
+```c++
+int &a = 42;//Error!不能引用一个右值
+int &&aa = 42;//Right! aa is an rvalue reference
+const &aaa = 42;//也是正确的
+const &&aaaa = 42;//正确的但是有点冗余（右值本来就不可被修改）
+
+int i = 42;
+int &&rr2 = i//Error! 右值引用不能够绑定到左值上
+int &r2 = i*42;//Error! 左值引用也不能绑定在右值上
+const int &cr2 = i*42;//Correct!
+int &&rr3 = i*42;//Correct!
+```
+右值引用是左值还是右值？：右值引用本质上还是一个左值
+- 右值引用在函数重载处的应用
+```c++
+void fun(const std::string &)
+void fun(std::string &&)
+```
+那么：`fun(s)`优先匹配`fun(const std::string &)`而`fun(s1+s2)`优先匹配`fun(std::string &&)`
 ## `<vector>` in C++
 ### Define and Basic use
 ```c++
@@ -574,3 +589,356 @@ v1 = v2;//copy
 ### `push_back()`,`v.back()`,`v.front()`,`v.popback()`,`v.at()`
 - `v.back()`and `v.front`retruns the **Reference** to the last element
 - `v.at(Index)`returns the **Reference** element of the index.(`.at()`function has boarder chechk)
+## 函数
+- 但是在c++中允许函数重名，但是需要能够通过传入值的不同（传递参数的个数/传递参数的类型）来区别，**注意返回值的不同不能够作为判断标准**
+- 同时和python 一样C++中的函数允许存在默认值，但是不能够像python一样通过关键字传参，因此，如果存在默认值的情况，只能够在参数的最后使用，在前面参数使用默认值而后面参数没有默认值的情况是没有效率的。
+### `Lambda`函数与表达式
+C++11中提供了对匿名函数的支持，称为`Lambda`函数，`Lambda`将函数看成对象，比如可以将他们赋值给变量作为参数传递，还可以像函数一样对他求值。`[capture list] (parameter list) mutable(可选) exception(可选) -> return type(可选) { function body }`，其中`capture list`用于指定`lambda`函数中可以访问那些外部的变量，以及如何访问这一些变量（按值捕捉或者是按照引用捕捉）`mutable`表示的意思是按值捕捉的变量内容可以被修改（注意只是能够修改副本，如果没有这个`mutable`就不能够修改传递进来的副本的数值）`reutrn type`表示的是如果存在返回值那么返回值的类型是什么.
+- 几个注意事项
+1. 如果在括号中没有参数的传递，那么就没有办法对外部的参数进行引用
+2. 如果要将所有的外部的副本全部传递进来，应该使用`[=]{}`
+3. 如果要将外部的所有的变量都引用调入则应该使用`[&]`
+### Function Overloding
+- Resolution
+    - An exact match
+    - 数组或者是函数类型退化匹配：数组会退化陈伟指针(`int arr[]`会退化成为`int *`函数会退化成为函数指针，以实现匹配)
+    - 顶层的`const`转换：忽略顶层的`const`差异，例如`int`,`const int`
+    - 添加底层的`const`类型的匹配，允许实参添加底层的`cosnt`类型来匹配实参 
+    - 整型类型或者是浮点类型的提升
+    - 数值转换:`int -> float`但是这类转换的匹配优先级很低
+- About `foo(NULL)`
+    - In C `null` can be defined with `(void* 0)` or `0`  or `long 0`
+    - In C++ `NULL` cannot be defined as `(void*) 0` 因为c++中不允许`void*`隐式转换成为其他的指针类型
+    - 当存在函数重载（如 `void fun(int)`; 和 `void fun(int*)`;）时，调用 `fun(NULL)` 可能在某些平台上匹配 `fun(int)`（将 `NULL` 视为 `int 0`），也可能因歧义编译出错。
+    - Better null pointer:`nullptr`
+        - c++11 引入`nullptr`他的类型是`std::nullptr_t`既不是`void*`也不是整型，是更加纯粹的`nullptr`
+        - 使用`nullptr`调用重载函数的时候:匹配更加明确`fun(nullptr)`必定匹配`func(int *)`避免了`NULL`可能引发的歧义问题。
+## Class
+### A Simple class
+```c++
+#include <iostream>
+#include <string>
+
+class Course {
+public:
+  std::string course;
+
+  Course() : course("") {}
+};
+
+class Student {
+private: // 私有变量不能够在结构体外部直接使用函数中的变量或者是修改变量，但是能够在类内部进行修改和获取
+  std::string name;
+  std::string id;
+  int entranceYear;
+  Course course;
+
+public:
+  Student(const std::string &name, const std::string &id, int entranceYear)
+      : name(name), id(id), entranceYear(entranceYear) {} // 初始化函数，通过初始化列表进行初始化
+
+  Student() {} // 默认的构造函数，用于创建一个空的对象，不进行初始化操作
+
+  void setName(const std::string &newName) { name = newName; }
+
+  void printfInfo(/*可以传入外部的变量*/) const {
+    std::cout << "I am " << name << ", id " << id << ", entrance year: " << entranceYear << std::endl;
+  }
+
+  bool graduated(int year) const { return 2025 - entranceYear >= 4; }
+};
+
+int main() {
+  Student stu("Liyiming", "2024533011", 2024); // 调用有传参的初始化函数进行构造
+  Student stu2;                                // 调用默认的初始化函数
+  stu.printfInfo();
+  stu.setName("LYM");
+  stu.printfInfo();
+  if (stu.graduated(2025))
+    std::cout << "Yes" << std::endl;
+  else
+    std::cout << "No" << std::endl;
+  stu2.printfInfo();
+  return 0;
+}
+```
+- `const`函数
+    - 在`const`成员函数中，不能调用非`cosnt`成员函数，因为非`const`函数可能修改对象状态，违背`const`函数的不修改的承诺
+    - `const`对象的调用限制：`const`对象只能够调用`const`成员函数。若调用非`const`函数，编译器会报错，确保`const`对象状态不被意外修改。
+- 析构函数
+```c++
+class Student{
+    Student(){
+        std::cout<<"a";
+    }
+    ~Student(){
+        std::cout<<"b";
+    }
+}
+```
+  - 在成员变量`student`的声明周期结束的时候，`~Student`的函数内容会被调用（常用于对于`malloc``new`出来的内存的释放）
+#### 搭配学习`new`,`delete`
+1. 分配单个对象
+```c++
+int* ptr = new int; // 分配一个 int 类型的内存，未初始化
+*ptr = 42;          // 给分配的内存赋值
+std::cout << *ptr << std::endl;
+delete ptr;         // 释放内存
+```
+2. 分配并且初始化单个对象
+```c++
+int* ptr = new int(42); // 分配一个 int 类型的内存，并初始化为 42
+std::cout << *ptr << std::endl;
+delete ptr;            // 释放内存
+```
+3. 分配数组
+```c++
+int* arr = new int[5]; // 分配一个包含 5 个 int 的数组
+for (int i = 0; i < 5; ++i) {
+    arr[i] = i * 10;   // 初始化数组
+    std::cout << arr[i] << " ";
+}
+std::cout << std::endl;
+delete[] arr;          // 释放数组内存
+```
+4. 分配自定义类型对象
+```c++
+class Student {
+public:
+    Student(const std::string& name) : name(name) {
+        std::cout << "Student " << name << " created." << std::endl;
+    }
+    ~Student() {
+        std::cout << "Student " << name << " destroyed." << std::endl;
+    }
+private:
+    std::string name;
+};
+
+Student* stu = new Student("Liyiming"); // 动态分配一个 Student 对象
+delete stu;                             // 释放内存，调用析构函数
+```
+5. 分配数组的自定义类型对象
+```c++
+Student* students = new Student[2] { {"Alice"}, {"Bob"} }; // 分配并初始化数组
+delete[] students;                                         // 释放数组内存
+```
+* 注意事项：
+    1. 必须释放内存
+    2. 数组释放要加上`[]`
+    3. 避免野指针
+### Copy constructor
+在c++中，通过类进行拷贝操作的时，默认行为是调用拷贝构造函数(Copy Constructor)。拷贝构造函数的一个作用是用一个已经存在的对象来初始化另外一个对象。
+- 默认拷贝构造函数：
+    如果你没有显式定义的拷贝构造函数，编译器会为类生成一个默认拷贝构造函数。 默认拷贝构造函数会对类的每个成员变量执行逐个成员的浅拷贝（对于浅拷贝的几个说明，对于一般的元素`int`,`float`这几个类型来说浅拷贝是安全的，对于复杂的类别而言`std::string`应为在`std::string`内部就已经实现了深拷贝的内容，所以也是安全的，但是对于普通数组而言，这种方法是不安全的）
+    ```c++
+    #include <iostream>
+    #include <string>
+    
+    class Student {
+    private:
+        std::string name;
+        int age;
+    
+    public:
+        Student(const std::string& name, int age) : name(name), age(age) {}
+    
+        void printInfo() const {
+            std::cout << "Name: " << name << ", Age: " << age << std::endl;
+        }
+    };
+    
+    int main() {
+        Student stu1("Alice", 20); // 创建对象 stu1
+        Student stu2 = stu1;       // 调用默认拷贝构造函数，创建 stu2
+    
+        stu1.printInfo(); // 输出：Name: Alice, Age: 20
+        stu2.printInfo(); // 输出：Name: Alice, Age: 20
+    
+        return 0;
+    }
+    ```
+- 初始化语法
+    - `Student a = b`,`Student a(b)`,`Student a{b}`这三个都是属于调用初始化语句的表达式，这里的`=`不是赋值的意思，而是初始化语句调用的意思。
+- 自定义`copy constructor`
+    ```c++
+    class Student {
+    public:
+        Student(const Student & other);
+    }
+    ```
+    1. 使用`const`防止求改外部其他的成员变量
+    2. 使用`&`来表示传递的引用，避免无限递归
+- 自定义默认：`Student(const Student &other) = default`
+- 禁止copy：`Student (const Student &other) = delete`
+- 如何做到不复制指针但是复制内容：
+```c++
+#include <iostream>
+
+class Student {
+  size_t size;
+  int *storage = new int[size]{};
+
+  Student(std::size_t size) : size(size), storage(new int[size]{}) {}//自定义初始化函数
+
+  ~Student() {
+    if (storage)
+      delete[] storage;
+  }//自定义析构函数
+
+  Student(const Student &other) : size(other.size) {
+    storage = new int[other.size]{};
+    for (std::size_t i = 0; i != other.size; i++)
+      storage[i] = other.at(i);
+  }
+
+  const int at(std::size_t i) const { return storage[i]; }
+
+  int at(std::size_t i) { return storage[i]; }
+};
+```
+### Type alias members in the standard library
+```c++
+std::string::size_type = s.size();
+std::vector<int>::size_type = v.size();
+std::list<int>::size_type = l.size();
+```
+### `static`member in class
+```c++
+#include <iostream>
+
+class Student {
+public:
+  static int number;
+};
+
+int Student::number = 0;//要在外部再次声明
+
+class Teacher {
+public:
+  static int number;
+};
+
+int Teacher::number = 0;
+
+int main() {
+
+  Student stu1;
+  stu1.number = 3;
+  Student stu2;
+  stu2.number = 4;
+  std::cout << Student::number;//4
+  Teacher tea1;
+  tea1.number = 3;
+  std::cout << Teacher::number;//3
+  return 0;
+}
+```
+- 应用：
+    - `std::string::npos`是c++标准库中`std::string`类的一个静态常量，表示一个特殊的值，用于指示“没找到”或“无效位置”。
+    - `std:;string::npos`通常被定义为：`static const size_type npos = -1;`
+    - 使用：
+    ```c++    
+    #include <iostream>
+    #include <string>
+    
+    int main() {
+        std::string str = "Hello, world!";
+        std::size_t pos = str.find("world");
+    
+        if (pos != std::string::npos) {
+            std::cout << "Found 'world' at position: " << pos << std::endl;
+        } else {
+            std::cout << "'world' not found!" << std::endl;
+        }
+    
+        return 0;
+    }
+    ```
+    - 和`string`一样自定义`npos`
+    ```c++
+    #include <iostream>
+    #include <string>
+
+    class Student {
+    std::string str{"example"}; // 初始化字符串
+
+    public:
+    static const std::size_t npos; // 定义 npos 为静态常量
+
+    auto find(char a) {
+        for (std::size_t i = 0; i < str.size(); ++i) { // 遍历字符串
+        if (str[i] == a) {
+            return i; // 返回找到字符的位置
+        }
+        }
+        return npos; // 如果未找到，返回 npos
+    }
+    };
+
+    // 初始化静态常量 npos
+    const std::size_t Student::npos = -1;
+
+    int main() {
+    Student stu;
+    char target = 'e';
+    auto pos = stu.find(target); // 使用 auto 自动推导返回值类型
+
+    if (pos != Student::npos) {
+        std::cout << "Found '" << target << "' at position: " << pos << std::endl;
+    } else {
+        std::cout << "Character '" << target << "' not found!" << std::endl;
+    }
+
+    return 0;
+    }
+    ```
+### `friend`
+- 友元类
+```c++
+#include <iostream>
+#include <string>
+
+// 前向声明
+class Student;
+
+class Teacher {
+public:
+    void printStudentInfo(const Student& stu); // 声明一个函数，用于访问 Student 的私有成员
+};
+
+class Student {
+private:
+    std::string name;
+    int age;
+
+    // 声明 Teacher 为友元类
+    friend class Teacher;
+
+public:
+    Student(const std::string& name, int age) : name(name), age(age) {}
+};
+
+// Teacher 类的成员函数实现
+void Teacher::printStudentInfo(const Student& stu) {
+    // 访问 Student 的私有成员
+    std::cout << "Student Name: " << stu.name << ", Age: " << stu.age << std::endl;
+}
+
+int main() {
+    Student stu("Alice", 20);
+    Teacher teacher;
+
+    teacher.printStudentInfo(stu); // 调用 Teacher 的成员函数访问 Student 的私有成员
+
+    return 0;
+}
+```
+### move assignment
+
+
+## 别名
+- C中的别名：`typedef long long LL;`
+- C++中的别名`using LL = long long;`
+- 注意这两个别名是存在范围的限定的它的作用域中的。
+想在外部使用:`Classname::LL x = 42;`,注意这个要求`using LL = long long`要在类内部的`public`范围中。
